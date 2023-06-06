@@ -2,7 +2,9 @@ version: "3.9"
 services:
     rust-web-service-api:
         build: ./docker/development
-        container_name: "cargo-watch-example"
+        container_name: "rust-web-service-api"
+        ports:
+          - 3000:3000
         volumes:
             - .:/app
         command: sh -c "cargo watch -x run"
