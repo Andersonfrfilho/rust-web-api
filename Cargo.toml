@@ -8,3 +8,4 @@ edition = "2018"
 
 [dependencies]
 actix-web = "4"
+actix-web-requestid = "2.1.0"
