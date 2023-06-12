@@ -1,6 +1,5 @@
 mod modules;
 use actix_web::{get, web, App, HttpResponse, HttpServer, Responder};
-use actix_web_requestid::RequestIDMiddleware;
 use modules::{health::controllers::users_scope_config, users::controllers::health_scope_config};
 
 #[get("/hello")]

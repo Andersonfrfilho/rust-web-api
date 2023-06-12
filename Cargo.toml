@@ -9,3 +9,7 @@ edition = "2018"
 [dependencies]
 actix-web = "4"
 actix-web-requestid = "2.1.0"
+dotenv = "0.15.0"
+dotenv_codegen = "0.15.0"
+env_logger = "0.10.0"
+log = "0.4.0"
