@@ -5,7 +5,7 @@ use std::{
 
 use actix_web::{
     dev::{forward_ready, Service, ServiceRequest, ServiceResponse, Transform},
-    http::header::{self, HeaderName, HeaderValue},
+    http::header::{HeaderName, HeaderValue},
     Error,
 };
 use futures_util::future::LocalBoxFuture;
@@ -58,8 +58,9 @@ where
     fn call(&self, mut req: ServiceRequest) -> Self::Future {
         let req_headers = req.headers();
         let uuid_v4 = Uuid::new_v4().to_string();
+        println!("{:?}", req_headers);
         let header_value_optional = HeaderValue::from_str(&uuid_v4).unwrap();
-        let request_id_information = match req_headers.get("x-request-id") {
+        let request_id_information = match req_headers.get(REQUEST_ID) {
             Some(request_id) => request_id,
             _ => &header_value_optional,
         };
@@ -73,7 +74,6 @@ where
         req.headers_mut().insert(header_name, header_value);
 
         let fut = self.service.call(req);
-
         Box::pin(async move {
             let res = fut.await?;
 
