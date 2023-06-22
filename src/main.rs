@@ -6,8 +6,8 @@ mod utils;
 use actix_web::{
     get, middleware::Logger, web, App, HttpRequest, HttpResponse, HttpServer, Responder,
 };
+use constants::AUTHORIZATION;
 use env_logger::Env;
-use middlewares::request_id::RequestId;
 use modules::{health::controllers::users_scope_config, users::controllers::health_scope_config};
 use utils::obfuscator_part_of_value;
 #[get("/hello")]
@@ -31,17 +31,19 @@ fn config(cfg: &mut web::ServiceConfig) {
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     env_logger::init_from_env(Env::default().default_filter_or("info"));
+    log::info!("starting HTTP server at http://localhost:8080");
     HttpServer::new(|| {
-        App::new().wrap(RequestId)
-            .wrap(
-                Logger::new(
-                    "%Authorization: %{Authorization}xi request-id: %{x-request-id} %a %{User-Agent}i",
-                )
-                .exclude("/healthcheck")
-                .custom_request_replace("Authorization", |req| {
-                    obfuscator_part_of_value(req.headers().get("Authorization"))
-                }),
+        App::new()
+        .wrap(
+            Logger::new(
+                "payload: %b %Authorization: %{Authorization}xi requestid: %{x-request-id}i %a %{User-Agent}i",
             )
+            .exclude("/healthcheck")
+            .custom_request_replace(&AUTHORIZATION, |req| {
+                obfuscator_part_of_value(req.headers().get(AUTHORIZATION))
+            }),
+        )
+        .wrap(middlewares::request_id::RequestId::default())
             .configure(config)
     })
     .bind(("0.0.0.0", 3000))?
