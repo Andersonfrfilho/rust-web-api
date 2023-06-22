@@ -1,4 +1,4 @@
-use actix_web::http::header::HeaderValue;
+use actix_web::http::header::{HeaderMap, HeaderValue};
 
 pub fn obfuscator_part_of_value(header_value: Option<&HeaderValue>) -> String {
     let value_string = match header_value {
@@ -14,6 +14,12 @@ pub fn obfuscator_part_of_value(header_value: Option<&HeaderValue>) -> String {
         );
         return obfuscated_value;
     }
+
+    return "***".to_string();
+}
+
+pub fn view_header(header_value: &HeaderMap) -> String {
+    println!("###### {:?}", header_value);
 
     return "***".to_string();
 }
