@@ -8,7 +8,7 @@ use actix_web::{
 };
 use constants::AUTHORIZATION;
 use env_logger::Env;
-use modules::{health::controllers::users_scope_config, users::controllers::health_scope_config};
+use modules::{health::controllers::heatlh_scope_config, users::controllers::users_scope_config};
 use utils::obfuscator_part_of_value;
 #[get("/hello")]
 async fn hello() -> impl Responder {
@@ -24,7 +24,7 @@ async fn hello_two(_req: HttpRequest) -> impl Responder {
 // this function could be located in a different module
 fn config(cfg: &mut web::ServiceConfig) {
     cfg.configure(users_scope_config)
-        .configure(health_scope_config)
+        .configure(heatlh_scope_config)
         .service(hello_two);
 }
 
@@ -36,7 +36,7 @@ async fn main() -> std::io::Result<()> {
         App::new()
         .wrap(
             Logger::new(
-                "payload: %b %Authorization: %{Authorization}xi requestid: %{x-request-id}i %a %{User-Agent}i",
+                "%a %t %r %s %b %{Referer}i %{User-Agent}i %T payload: %b %Authorization: %{Authorization}xi requestid: %{x-request-id}i",
             )
             .exclude("/healthcheck")
             .custom_request_replace(&AUTHORIZATION, |req| {
