@@ -1,5 +1,5 @@
-use actix_web::{delete, get, patch, post, web, HttpResponse, Responder};
-use actix_web::{App, HttpServer, Result};
+use actix_web::Result;
+use actix_web::{delete, get, patch, post, test, web, HttpRequest, HttpResponse, Responder};
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize)]
@@ -12,8 +12,7 @@ struct MyObj {
     name: String,
 }
 
-#[get("/")]
-async fn index() -> impl Responder {
+async fn index(req: HttpRequest) -> impl Responder {
     HttpResponse::Ok().body("traz usuario")
 }
 
@@ -42,12 +41,38 @@ async fn delete() -> impl Responder {
 }
 
 pub fn users_scope_config(cfg: &mut web::ServiceConfig) {
+    let route_index = web::resource("/").route(web::get().to(index));
     cfg.service(
         web::scope("/v1/users")
             .service(create)
-            .service(index)
+            .service(route_index)
             .service(show)
             .service(update)
             .service(delete),
     );
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use actix_web::{
+        http::{self, header::ContentType},
+        test,
+    };
+
+    #[actix_web::test]
+    async fn test_index_ok() {
+        let req = test::TestRequest::default()
+            .insert_header(ContentType::plaintext())
+            .to_http_request();
+        let resp = index(req.clone()).await.respond_to(&req);
+        assert_eq!(resp.status(), http::StatusCode::OK);
+    }
+
+    #[actix_web::test]
+    async fn test_index_not_ok() {
+        let req = test::TestRequest::default().to_http_request();
+        let resp = index(req.clone()).await.respond_to(&req);
+        assert_eq!(resp.status(), http::StatusCode::OK);
+    }
 }
