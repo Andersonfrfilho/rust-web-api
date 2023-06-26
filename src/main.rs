@@ -8,7 +8,7 @@ use actix_web::{
 };
 use constants::AUTHORIZATION;
 use env_logger::Env;
-use modules::{health::controllers::heatlh_scope_config, users::controllers::users_scope_config};
+use modules::{health::controller::health_scope_config, users::controller::users_scope_config};
 use utils::obfuscator_part_of_value;
 #[get("/hello")]
 async fn hello() -> impl Responder {
@@ -24,7 +24,7 @@ async fn hello_two(_req: HttpRequest) -> impl Responder {
 // this function could be located in a different module
 fn config(cfg: &mut web::ServiceConfig) {
     cfg.configure(users_scope_config)
-        .configure(heatlh_scope_config)
+        .configure(health_scope_config)
         .service(hello_two);
 }
 
