@@ -8,8 +8,29 @@ use actix_web::{
 };
 use constants::AUTHORIZATION;
 use env_logger::Env;
+use serde::{Deserialize, Serialize};
+use utoipa::{
+    openapi::schema::{Object, ObjectBuilder},
+    IntoParams, OpenApi, PartialSchema, ToSchema,
+};
+use utoipa_swagger_ui::SwaggerUi;
+
 use modules::{health::controller::health_scope_config, users::controller::users_scope_config};
 use utils::obfuscator_part_of_value;
+
+#[utoipa::path(
+     get,
+     path = "/hello",
+     responses(
+         (status = 200,
+             examples(
+                //  ("Demo" = (summary = "This is summary", description = "Long description",
+                //              value = json!(User{name: "Demo".to_string()}))),
+                 ("John" = (summary = "Another user", value = json!({"name": "John"})))
+              )
+         )
+     )
+ )]
 #[get("/hello")]
 async fn hello() -> impl Responder {
     HttpResponse::Ok().body("Hello world!")
@@ -31,7 +52,11 @@ fn config(cfg: &mut web::ServiceConfig) {
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     env_logger::init_from_env(Env::default().default_filter_or("info"));
-    log::info!("starting HTTP server at http://localhost:8080");
+
+    #[derive(OpenApi)]
+    #[openapi(paths(hello))]
+    struct ApiDoc;
+
     HttpServer::new(|| {
         App::new()
         .wrap(
@@ -44,7 +69,10 @@ async fn main() -> std::io::Result<()> {
             }),
         )
         .wrap(middlewares::request_id::RequestId::default())
-            .configure(config)
+            .configure(config).service(
+                                 SwaggerUi::new("/doc/{_:.*}")
+                                     .url("/api-docs/openapi.json", ApiDoc::openapi()),
+                             )
     })
     .bind(("0.0.0.0", 3000))?
     .run()

@@ -31,8 +31,6 @@ where
     }
 
     fn call(&self, mut req: ServiceRequest) -> Self::Future {
-        log::info!("request is passing through the RequestId middleware");
-
         let req_headers = req.headers();
         let uuid_v4 = Uuid::new_v4().to_string();
         let header_value_optional = HeaderValue::from_str(&uuid_v4).unwrap();
@@ -47,10 +45,6 @@ where
         let header_name = HeaderName::from_str(&REQUEST_ID).unwrap();
         let header_value = HeaderValue::from_str(&request_id_info_string).unwrap();
         req.headers_mut().insert(header_name, header_value);
-        // if self.enabled {
-        //     // insert data into extensions if enabled
-        // }
-
         self.service.call(req)
     }
 }
