@@ -13,7 +13,7 @@ use utoipa::{
     openapi::schema::{Object, ObjectBuilder},
     IntoParams, OpenApi, PartialSchema, ToSchema,
 };
-use utoipa_swagger_ui::SwaggerUi;
+use utoipa_swagger_ui::{SwaggerUi, Url};
 
 use modules::{health::controller::health_scope_config, users::controller::users_scope_config};
 use utils::obfuscator_part_of_value;
@@ -57,6 +57,10 @@ async fn main() -> std::io::Result<()> {
     #[openapi(paths(hello))]
     struct ApiDoc;
 
+    #[derive(OpenApi)]
+    #[openapi(paths(modules::health::controller::healthcheck))]
+    struct HealthDoc;
+
     HttpServer::new(|| {
         App::new()
         .wrap(
@@ -71,7 +75,16 @@ async fn main() -> std::io::Result<()> {
         .wrap(middlewares::request_id::RequestId::default())
             .configure(config).service(
                                  SwaggerUi::new("/doc/{_:.*}")
-                                     .url("/api-docs/openapi.json", ApiDoc::openapi()),
+                                 .urls(vec![
+                                    (
+                                        Url::new("api1", "/api-docs/openapi1.json"),
+                                        ApiDoc::openapi(),
+                                    ),
+                                    (
+                                        Url::new("healthcheck", "/api-docs/healthcheck.json"),
+                                        HealthDoc::openapi(),
+                                    ),
+                                ]),
                              )
     })
     .bind(("0.0.0.0", 3000))?
