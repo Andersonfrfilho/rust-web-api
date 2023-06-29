@@ -8,14 +8,16 @@ use actix_web::{
 };
 use constants::AUTHORIZATION;
 use env_logger::Env;
-use serde::{Deserialize, Serialize};
 use utoipa::{
     openapi::schema::{Object, ObjectBuilder},
     IntoParams, OpenApi, PartialSchema, ToSchema,
 };
 use utoipa_swagger_ui::{SwaggerUi, Url};
 
-use modules::{health::controller::health_scope_config, users::controller::users_scope_config};
+use modules::{
+    doc::controller::doc_scope_config, health::controller::health_scope_config,
+    users::controller::users_scope_config,
+};
 use utils::obfuscator_part_of_value;
 
 #[utoipa::path(
@@ -46,6 +48,7 @@ async fn hello_two(_req: HttpRequest) -> impl Responder {
 fn config(cfg: &mut web::ServiceConfig) {
     cfg.configure(users_scope_config)
         .configure(health_scope_config)
+        .configure(doc_scope_config)
         .service(hello_two);
 }
 
@@ -54,7 +57,7 @@ async fn main() -> std::io::Result<()> {
     env_logger::init_from_env(Env::default().default_filter_or("info"));
 
     #[derive(OpenApi)]
-    #[openapi(paths(hello))]
+    #[openapi(paths(hello, modules::health::controller::healthcheck))]
     struct ApiDoc;
 
     #[derive(OpenApi)]
@@ -73,19 +76,7 @@ async fn main() -> std::io::Result<()> {
             }),
         )
         .wrap(middlewares::request_id::RequestId::default())
-            .configure(config).service(
-                                 SwaggerUi::new("/doc/{_:.*}")
-                                 .urls(vec![
-                                    (
-                                        Url::new("api1", "/api-docs/openapi1.json"),
-                                        ApiDoc::openapi(),
-                                    ),
-                                    (
-                                        Url::new("healthcheck", "/api-docs/healthcheck.json"),
-                                        HealthDoc::openapi(),
-                                    ),
-                                ]),
-                             )
+            .configure(config)
     })
     .bind(("0.0.0.0", 3000))?
     .run()
