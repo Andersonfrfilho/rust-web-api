@@ -56,14 +56,6 @@ fn config(cfg: &mut web::ServiceConfig) {
 async fn main() -> std::io::Result<()> {
     env_logger::init_from_env(Env::default().default_filter_or("info"));
 
-    #[derive(OpenApi)]
-    #[openapi(paths(hello, modules::health::controller::healthcheck))]
-    struct ApiDoc;
-
-    #[derive(OpenApi)]
-    #[openapi(paths(modules::health::controller::healthcheck))]
-    struct HealthDoc;
-
     HttpServer::new(|| {
         App::new()
         .wrap(
