@@ -3,6 +3,8 @@
     "./Cargo.toml"
   ],
   "cSpell.words": [
-    "healthcheck"
+    "actix",
+    "healthcheck",
+    "openapi"
   ]
 }

@@ -4,7 +4,7 @@ trait Custom {
     fn new(code: i32, message: &String) -> Self;
 }
 
-#[derive(utoipa::ToResponse, Serialize)]
+#[derive(utoipa::ToSchema, Serialize)]
 pub struct BadRequest {
     code: i32,
     message: String,
@@ -19,8 +19,11 @@ impl Custom for BadRequest {
     }
 }
 
-#[derive(utoipa::ToResponse, Serialize)]
+#[derive(Serialize, utoipa::ToSchema)]
+#[schema(example = json!(NotFound{code: 4001, message: "Resource not found".to_string()}))]
 pub struct NotFound {
+    /// Property responsible for application health status.
+    #[schema(example = true, example = false, default = false)]
     code: i32,
     message: String,
 }
@@ -34,7 +37,7 @@ impl Custom for NotFound {
     }
 }
 
-#[derive(utoipa::ToResponse, Serialize)]
+#[derive(utoipa::ToSchema, Serialize)]
 pub struct InternalServerError {
     code: i32,
     message: String,

@@ -4,34 +4,40 @@ use utoipa::openapi::schema;
 
 use crate::modules::common::error::{BadRequest, InternalServerError, NotFound};
 
-#[derive(utoipa::ToResponse, Serialize, utoipa::ToSchema)]
-pub struct HealthSuccessResponse {
-    #[schema(example = true, default = true)]
+#[derive(Serialize, utoipa::ToSchema)]
+#[schema(example = json!(SuccessResponse{up: false}))]
+pub struct SuccessResponse {
+    /// Property responsible for application health status.
+    #[schema(example = true, example = false, default = false)]
     up: bool,
-}
-#[derive(utoipa::ToResponse)]
-struct Response {
-    message: String,
 }
 
 #[derive(utoipa::IntoResponses)]
 enum HealthResponses {
-    /// Success response description.
+    /// Success response
     #[response(status = 200)]
-    Success(#[to_response] HealthSuccessResponse),
+    Success(#[to_schema] SuccessResponse),
 
+    /// Success response description.
     #[response(status = 404)]
-    NotFound(#[ref_response] NotFound),
-
+    NotFound(#[to_schema] NotFound),
     #[response(status = 400)]
-    BadRequest(#[ref_response] BadRequest, NotFound),
-
+    BadRequest(#[to_schema] BadRequest, NotFound),
     #[response(status = 500)]
-    ServerError(#[to_response] InternalServerError),
+    ServerError(#[to_schema] InternalServerError),
 }
-#[utoipa::path(get, path = "/health", tag = "health", responses(HealthResponses))]
+
+/// Route to verify health application
+#[utoipa::path(get, path = "/health", tag = "health", responses(HealthResponses),
+// request_body(content = SuccessResponse,
+//     examples(
+//         ("Value1" = (value = json!({"value": "this is value"}) ) ),
+//         ("Value2" = (value = json!({"value": "this is value2"}) ) )
+//     )
+// )
+)]
 pub async fn health() -> Result<impl Responder> {
-    let obj = HealthSuccessResponse { up: true };
+    let obj = SuccessResponse { up: true };
     Ok(web::Json(obj))
 }
 
