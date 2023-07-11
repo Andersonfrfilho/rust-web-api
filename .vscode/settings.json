@@ -5,6 +5,7 @@
   "cSpell.words": [
     "actix",
     "healthcheck",
-    "openapi"
+    "openapi",
+    "utoipa"
   ]
 }

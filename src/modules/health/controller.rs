@@ -1,14 +1,13 @@
-use actix_web::{get, web, HttpResponse, Responder, Result};
+use actix_web::{web, Responder, Result};
 use serde::Serialize;
-use utoipa::openapi::schema;
 
-use crate::modules::common::error::{BadRequest, InternalServerError, NotFound};
+use crate::modules::common::error::{BadRequest, InternalServerError};
 
 #[derive(Serialize, utoipa::ToSchema)]
 #[schema(example = json!(SuccessResponse{up: false}))]
 pub struct SuccessResponse {
     /// Property responsible for application health status.
-    #[schema(example = true, example = false, default = false)]
+    #[schema(example = true, default = true)]
     up: bool,
 }
 
@@ -16,14 +15,17 @@ pub struct SuccessResponse {
 enum HealthResponses {
     /// Success response
     #[response(status = 200)]
+    #[allow(dead_code)]
     Success(#[to_schema] SuccessResponse),
 
-    /// Success response description.
-    #[response(status = 404)]
-    NotFound(#[to_schema] NotFound),
+    /// Bad request response error
     #[response(status = 400)]
-    BadRequest(#[to_schema] BadRequest, NotFound),
+    #[allow(dead_code)]
+    BadRequest(#[to_schema] BadRequest),
+
+    /// Internal Server error
     #[response(status = 500)]
+    #[allow(dead_code)]
     ServerError(#[to_schema] InternalServerError),
 }
 

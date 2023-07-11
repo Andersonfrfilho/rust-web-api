@@ -6,7 +6,11 @@ trait Custom {
 
 #[derive(utoipa::ToSchema, Serialize)]
 pub struct BadRequest {
+    /// Property represented custom code error
+    #[schema(example = 4000, default = 0)]
     code: i32,
+    /// Property represented custom message error
+    #[schema(example = "Bad request error in flow", default = "")]
     message: String,
 }
 
@@ -22,9 +26,11 @@ impl Custom for BadRequest {
 #[derive(Serialize, utoipa::ToSchema)]
 #[schema(example = json!(NotFound{code: 4001, message: "Resource not found".to_string()}))]
 pub struct NotFound {
-    /// Property responsible for application health status.
-    #[schema(example = true, example = false, default = false)]
+    /// Property represented custom code error
+    #[schema(example = 4004, default = 0)]
     code: i32,
+    /// Property represented custom message error
+    #[schema(example = "Route not found", default = "")]
     message: String,
 }
 
@@ -39,7 +45,11 @@ impl Custom for NotFound {
 
 #[derive(utoipa::ToSchema, Serialize)]
 pub struct InternalServerError {
+    /// Property represented custom code error
+    #[schema(example = 5000, default = 0)]
     code: i32,
+    /// Property represented custom message error
+    #[schema(example = "Internal Server Error verify logs", default = "")]
     message: String,
 }
 

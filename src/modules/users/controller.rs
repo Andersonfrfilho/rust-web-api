@@ -2,6 +2,8 @@ use actix_web::Result;
 use actix_web::{delete, get, patch, post, test, web, HttpRequest, HttpResponse, Responder};
 use serde::{Deserialize, Serialize};
 
+use crate::modules::users::services::find_by_id;
+use crate::modules::users::services::find_by_id::MyError;
 #[derive(Deserialize)]
 struct Info {
     username: String,
@@ -17,12 +19,11 @@ async fn index(req: HttpRequest) -> impl Responder {
 }
 
 #[get("/:user_id")]
-async fn show(name: web::Path<String>) -> Result<impl Responder> {
-    println!("{}", name);
-    let obj = MyObj {
-        name: name.to_string(),
-    };
-    Ok(web::Json(obj))
+async fn show(name: web::Path<String>) -> Result<impl Responder, MyError> {
+    const value_string: &String = &String::from("strisd");
+    let result = find_by_id::execute(&value_string);
+    result.map_err(|_e| MyError { name: "asd" })?;
+    Ok(web::Json(result))
 }
 
 #[patch("/:user_id")]

@@ -62,7 +62,7 @@ async fn main() -> std::io::Result<()> {
             Logger::new(
                 "%a %t %r %s %b %{Referer}i %{User-Agent}i %T payload: %b %Authorization: %{Authorization}xi requestid: %{x-request-id}i",
             )
-            .exclude("/healthcheck")
+            .exclude("/healthcheck").exclude_regex("/doc")
             .custom_request_replace(&AUTHORIZATION, |req| {
                 obfuscator_part_of_value(req.headers().get(AUTHORIZATION))
             }),

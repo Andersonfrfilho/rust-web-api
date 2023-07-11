@@ -1091,6 +1091,7 @@ version = "0.1.0"
 dependencies = [
  "actix-web",
  "actix-web-requestid",
+ "derive_more",
  "dotenv",
  "dotenv_codegen",
  "env_logger",
