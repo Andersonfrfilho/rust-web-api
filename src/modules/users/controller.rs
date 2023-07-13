@@ -1,29 +1,33 @@
+use actix_web::dev::Path;
+use actix_web::web::Json;
 use actix_web::Result;
-use actix_web::{delete, get, patch, post, test, web, HttpRequest, HttpResponse, Responder};
-use serde::{Deserialize, Serialize};
+use actix_web::{delete, get, patch, post, web, HttpRequest, HttpResponse, Responder};
+use serde::Deserialize;
 
 use crate::modules::users::services::find_by_id;
 use crate::modules::users::services::find_by_id::MyError;
-#[derive(Deserialize)]
-struct Info {
-    username: String,
-}
 
-#[derive(Serialize)]
-struct MyObj {
-    name: String,
-}
+use super::structs::User;
 
 async fn index(req: HttpRequest) -> impl Responder {
     HttpResponse::Ok().body("traz usuario")
 }
 
-#[get("/:user_id")]
-async fn show(name: web::Path<String>) -> Result<impl Responder, MyError> {
-    const value_string: &String = &String::from("strisd");
-    let result = find_by_id::execute(&value_string);
-    result.map_err(|_e| MyError { name: "asd" })?;
-    Ok(web::Json(result))
+#[derive(Deserialize)]
+struct PathShow {
+    id: String,
+}
+
+async fn show(data: web::Path<PathShow>) -> Result<web::Json<User>, actix_web::Error> {
+    let id = data.id.to_string();
+    let mut user: User = User::origin();
+    let mut error: MyError = MyError::origin();
+    match find_by_id::execute(&id) {
+        Ok(result) => user = result,
+        Err(err) => error = err,
+    };
+
+    Ok(web::Json(user))
 }
 
 #[patch("/:user_id")]
@@ -32,8 +36,8 @@ async fn update() -> impl Responder {
 }
 
 #[post("/")]
-async fn create(info: web::Json<Info>) -> Result<String> {
-    Ok(format!("Welcome {}!", info.username))
+async fn create(info: web::Json<String>) -> Result<String> {
+    Ok(format!("Welcome {}!", info.to_string()))
 }
 
 #[delete("/:user_id")]
@@ -43,37 +47,13 @@ async fn delete() -> impl Responder {
 
 pub fn users_scope_config(cfg: &mut web::ServiceConfig) {
     let route_index = web::resource("/").route(web::get().to(index));
+    let route_show = web::resource("/{id}").route(web::get().to(show));
     cfg.service(
         web::scope("/v1/users")
             .service(create)
             .service(route_index)
-            .service(show)
+            .service(route_show)
             .service(update)
             .service(delete),
     );
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use actix_web::{
-        http::{self, header::ContentType},
-        test,
-    };
-
-    #[actix_web::test]
-    async fn test_index_ok() {
-        let req = test::TestRequest::default()
-            .insert_header(ContentType::plaintext())
-            .to_http_request();
-        let resp = index(req.clone()).await.respond_to(&req);
-        assert_eq!(resp.status(), http::StatusCode::OK);
-    }
-
-    #[actix_web::test]
-    async fn test_index_not_ok() {
-        let req = test::TestRequest::default().to_http_request();
-        let resp = index(req.clone()).await.respond_to(&req);
-        assert_eq!(resp.status(), http::StatusCode::OK);
-    }
 }

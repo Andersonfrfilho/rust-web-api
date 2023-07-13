@@ -47,3 +47,21 @@ pub fn health_scope_config(cfg: &mut web::ServiceConfig) {
     let route_health = web::resource("/health").route(web::get().to(health));
     cfg.service(route_health);
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use actix_web::{
+        http::{self, header::ContentType},
+        test,
+    };
+
+    #[actix_web::test]
+    async fn test_health_ok() {
+        let req = test::TestRequest::default()
+            .insert_header(ContentType::json())
+            .to_http_request();
+        let resp = health().await.respond_to(&req);
+        assert_eq!(resp.status(), http::StatusCode::OK);
+    }
+}

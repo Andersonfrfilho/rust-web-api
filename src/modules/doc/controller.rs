@@ -3,7 +3,7 @@ use crate::modules::{
     common::error::{BadRequest, InternalServerError, NotFound},
 };
 use actix_web::web;
-use utoipa::{openapi, OpenApi};
+use utoipa::OpenApi;
 use utoipa_swagger_ui::{SwaggerUi, Url};
 
 pub fn doc_scope_config(cfg: &mut web::ServiceConfig) {

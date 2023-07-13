@@ -1,3 +1,5 @@
+use core::fmt;
+
 use serde::Serialize;
 
 trait Custom {
@@ -59,5 +61,17 @@ impl Custom for InternalServerError {
             code,
             message: message.clone(),
         };
+    }
+}
+
+#[derive(Debug)]
+pub enum AppErrorType {
+    DbError,
+    NotFoundError,
+}
+
+impl fmt::Display for AppErrorType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{:?}", self)
     }
 }
