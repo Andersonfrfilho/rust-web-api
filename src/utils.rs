@@ -2,7 +2,7 @@ use actix_web::http::header::{HeaderMap, HeaderValue};
 
 pub fn obfuscator_part_of_value(header_value: Option<&HeaderValue>) -> String {
     let value_string = match header_value {
-        None => panic!("value not defined"),
+        None => "No Content",
         Some(header) => header.to_str().unwrap(),
     };
 

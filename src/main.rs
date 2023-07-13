@@ -8,8 +8,31 @@ use actix_web::{
 };
 use constants::AUTHORIZATION;
 use env_logger::Env;
-use modules::{health::controllers::heatlh_scope_config, users::controllers::users_scope_config};
+use utoipa::{
+    openapi::schema::{Object, ObjectBuilder},
+    IntoParams, OpenApi, PartialSchema, ToSchema,
+};
+use utoipa_swagger_ui::{SwaggerUi, Url};
+
+use modules::{
+    doc::controller::doc_scope_config, health::controller::health_scope_config,
+    users::controller::users_scope_config,
+};
 use utils::obfuscator_part_of_value;
+
+#[utoipa::path(
+     get,
+     path = "/hello",
+     responses(
+         (status = 200,
+             examples(
+                //  ("Demo" = (summary = "This is summary", description = "Long description",
+                //              value = json!(User{name: "Demo".to_string()}))),
+                 ("John" = (summary = "Another user", value = json!({"name": "John"})))
+              )
+         )
+     )
+ )]
 #[get("/hello")]
 async fn hello() -> impl Responder {
     HttpResponse::Ok().body("Hello world!")
@@ -24,21 +47,22 @@ async fn hello_two(_req: HttpRequest) -> impl Responder {
 // this function could be located in a different module
 fn config(cfg: &mut web::ServiceConfig) {
     cfg.configure(users_scope_config)
-        .configure(heatlh_scope_config)
+        .configure(health_scope_config)
+        .configure(doc_scope_config)
         .service(hello_two);
 }
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     env_logger::init_from_env(Env::default().default_filter_or("info"));
-    log::info!("starting HTTP server at http://localhost:8080");
+
     HttpServer::new(|| {
         App::new()
         .wrap(
             Logger::new(
                 "%a %t %r %s %b %{Referer}i %{User-Agent}i %T payload: %b %Authorization: %{Authorization}xi requestid: %{x-request-id}i",
             )
-            .exclude("/healthcheck")
+            .exclude("/healthcheck").exclude_regex("/doc")
             .custom_request_replace(&AUTHORIZATION, |req| {
                 obfuscator_part_of_value(req.headers().get(AUTHORIZATION))
             }),
