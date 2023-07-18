@@ -1,11 +1,9 @@
-use actix_web::dev::Path;
-use actix_web::web::Json;
 use actix_web::Result;
-use actix_web::{delete, get, patch, post, web, HttpRequest, HttpResponse, Responder};
+use actix_web::{delete, patch, post, web, HttpRequest, HttpResponse, Responder};
 use serde::Deserialize;
 
+use crate::modules::error::custom::Custom;
 use crate::modules::users::services::find_by_id;
-use crate::modules::users::services::find_by_id::MyError;
 
 use super::structs::User;
 
@@ -18,15 +16,24 @@ struct PathShow {
     id: String,
 }
 
-async fn show(data: web::Path<PathShow>) -> Result<web::Json<User>, actix_web::Error> {
+fn string_to_static_str(s: String) -> &'static str {
+    Box::leak(s.into_boxed_str())
+}
+
+async fn show(data: web::Path<PathShow>) -> Result<web::Json<User>, Custom> {
     let id = data.id.to_string();
     let mut user: User = User::origin();
-    let mut error: MyError = MyError::origin();
+    let mut error: Custom = Custom::from(String::from(
+        "I know it doesn't make sense but had to give an example of UserError",
+    ));
     match find_by_id::execute(&id) {
         Ok(result) => user = result,
-        Err(err) => error = err,
+        Err(err) => {
+            error = Custom::from(String::from(
+                "I know it doesn't make sense but had to give an example of UserError",
+            ))
+        }
     };
-
     Ok(web::Json(user))
 }
 

@@ -8,11 +8,6 @@ use actix_web::{
 };
 use constants::AUTHORIZATION;
 use env_logger::Env;
-use utoipa::{
-    openapi::schema::{Object, ObjectBuilder},
-    IntoParams, OpenApi, PartialSchema, ToSchema,
-};
-use utoipa_swagger_ui::{SwaggerUi, Url};
 
 use modules::{
     doc::controller::doc_scope_config, health::controller::health_scope_config,
