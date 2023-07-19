@@ -2,7 +2,8 @@ use actix_web::Result;
 use actix_web::{delete, patch, post, web, HttpRequest, HttpResponse, Responder};
 use serde::Deserialize;
 
-use crate::modules::error::custom::Custom;
+use crate::modules::error::constant::INVALID_ID_CODE;
+use crate::modules::error::custom::{CustomError, CustomErrorType};
 use crate::modules::users::services::find_by_id;
 
 use super::structs::User;
@@ -20,19 +21,12 @@ fn string_to_static_str(s: String) -> &'static str {
     Box::leak(s.into_boxed_str())
 }
 
-async fn show(data: web::Path<PathShow>) -> Result<web::Json<User>, Custom> {
+async fn show(data: web::Path<PathShow>) -> Result<web::Json<User>, CustomError> {
     let id = data.id.to_string();
     let mut user: User = User::origin();
-    let mut error: Custom = Custom::from(String::from(
-        "I know it doesn't make sense but had to give an example of UserError",
-    ));
     match find_by_id::execute(&id) {
-        Ok(result) => user = result,
-        Err(err) => {
-            error = Custom::from(String::from(
-                "I know it doesn't make sense but had to give an example of UserError",
-            ))
-        }
+        Ok(value) => user = value,
+        Err(err) => return Err(err),
     };
     Ok(web::Json(user))
 }

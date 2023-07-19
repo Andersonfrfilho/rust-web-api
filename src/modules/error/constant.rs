@@ -1,4 +1,7 @@
-const BAD_REQUEST_STATUS_CODE: u16 = 400;
+use super::custom::CustomErrorType;
 
-pub const INVALID_ID_CODE: (i32, &'static str, u16) =
-    (4001, "Invalid id content", BAD_REQUEST_STATUS_CODE);
+pub const INVALID_ID_CODE: (u16, &str, CustomErrorType) = (
+    4001,
+    "Invalid format identifier",
+    CustomErrorType::DieselError,
+);
