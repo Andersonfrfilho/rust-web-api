@@ -1,7 +1,9 @@
 use actix_web::{http::StatusCode, HttpResponse, ResponseError};
 use derive_more::{Display, Error};
 use serde::Serialize;
+
 #[derive(utoipa::ToSchema, Serialize)]
+
 pub struct ErroContent {
     /// Property represented custom code error
     #[schema(example = 4000, default = 0)]
@@ -78,6 +80,15 @@ impl std::fmt::Display for CustomError {
         write!(f, "{:?}", self)
     }
 }
+
+// impl From<diesel::result::Error> for CustomError {
+//     fn from(err: diesel::result::Error) -> CustomError {
+//         CustomError {
+//             message: Some(err.to_string()),
+//             err_type: CustomErrorType::DieselError,
+//         }
+//     }
+// }
 
 // impl From<diesel::result::Error> for CustomError {
 //     fn from(err: diesel::result::Error) -> CustomError {
