@@ -1,28 +1,12 @@
-use crate::modules::users::structs::User;
-use derive_more::{Display, Error};
+use crate::modules::{
+    error::{constant::INVALID_ID_CODE, custom::CustomError},
+    users::structs::User,
+};
 
-#[derive(Debug, Display, Error)]
-#[display(fmt = "my error: {}", name)]
-#[non_exhaustive]
-pub struct MyError {
-    name: &'static str,
-}
-
-impl MyError {
-    pub fn origin() -> MyError {
-        MyError { name: "" }
-    }
-
-    pub fn new(name: &'static str) -> MyError {
-        MyError { name }
-    }
-}
-
-pub fn execute(id: &String) -> Result<User, MyError> {
+pub fn execute(id: &String) -> Result<User, CustomError> {
     let obj = User::origin();
-    println!("{}", id);
-    if id.is_empty() {
-        return Err(MyError::origin());
+    if id.len() < 9 {
+        return Err(CustomError::from(INVALID_ID_CODE));
     }
     return Ok(obj);
 }

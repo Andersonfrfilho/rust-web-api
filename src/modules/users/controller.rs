@@ -1,11 +1,10 @@
-use actix_web::dev::Path;
-use actix_web::web::Json;
 use actix_web::Result;
-use actix_web::{delete, get, patch, post, web, HttpRequest, HttpResponse, Responder};
+use actix_web::{delete, patch, post, web, HttpRequest, HttpResponse, Responder};
 use serde::Deserialize;
 
+use crate::modules::error::constant::INVALID_ID_CODE;
+use crate::modules::error::custom::{CustomError, CustomErrorType};
 use crate::modules::users::services::find_by_id;
-use crate::modules::users::services::find_by_id::MyError;
 
 use super::structs::User;
 
@@ -18,15 +17,17 @@ struct PathShow {
     id: String,
 }
 
-async fn show(data: web::Path<PathShow>) -> Result<web::Json<User>, actix_web::Error> {
+fn string_to_static_str(s: String) -> &'static str {
+    Box::leak(s.into_boxed_str())
+}
+
+async fn show(data: web::Path<PathShow>) -> Result<web::Json<User>, CustomError> {
     let id = data.id.to_string();
     let mut user: User = User::origin();
-    let mut error: MyError = MyError::origin();
     match find_by_id::execute(&id) {
-        Ok(result) => user = result,
-        Err(err) => error = err,
+        Ok(value) => user = value,
+        Err(err) => return Err(err),
     };
-
     Ok(web::Json(user))
 }
 

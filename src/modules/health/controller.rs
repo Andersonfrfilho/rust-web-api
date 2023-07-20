@@ -1,7 +1,7 @@
 use actix_web::{web, Responder, Result};
 use serde::Serialize;
 
-use crate::modules::common::error::{BadRequest, InternalServerError};
+use crate::modules::error::custom::{BadRequest, InternalServerError};
 
 #[derive(Serialize, utoipa::ToSchema)]
 #[schema(example = json!(SuccessResponse{up: false}))]

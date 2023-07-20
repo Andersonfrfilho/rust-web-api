@@ -1,6 +1,6 @@
 use crate::modules::{
     self,
-    common::error::{BadRequest, InternalServerError, NotFound},
+    error::custom::{BadRequest, InternalServerError, NotFound},
 };
 use actix_web::web;
 use utoipa::OpenApi;
