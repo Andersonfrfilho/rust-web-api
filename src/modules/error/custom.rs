@@ -1,6 +1,12 @@
+use std::io::Split;
+
 use actix_web::{http::StatusCode, HttpResponse, ResponseError};
 use derive_more::{Display, Error};
 use serde::Serialize;
+use utoipa::openapi::Array;
+use validator::ValidationErrors;
+
+use super::constant::INVALID_PAYLOAD;
 
 #[derive(utoipa::ToSchema, Serialize)]
 
@@ -11,6 +17,10 @@ pub struct ErroContent {
     /// Property represented custom message error
     #[schema(example = "Bad request error in flow", default = "")]
     message: &'static str,
+
+    /// Property represented custom message error
+    #[schema(example = "Bad request error in flow", default = "")]
+    contents: Option<Vec<Content>>,
 }
 
 #[derive(utoipa::ToSchema, Serialize)]
@@ -52,10 +62,25 @@ pub enum CustomErrorType {
 }
 
 #[derive(Debug, Serialize, Error)]
+pub struct Content {
+    field: Option<String>,
+    message: Option<String>,
+}
+
+impl Content {
+    pub fn new(field: String, message: String) -> Self {
+        Content {
+            field: Some(field),
+            message: Some(message),
+        }
+    }
+}
+#[derive(Debug, Serialize, Error)]
 pub struct CustomError {
     pub message: &'static str,
     pub err_type: CustomErrorType,
     pub code: u16,
+    pub contents: Option<Vec<Content>>,
 }
 
 impl CustomError {
@@ -68,10 +93,27 @@ impl CustomError {
     }
 
     pub fn body_error(&self) -> ErroContent {
+        let contents = match &self.contents {
+            Some(contents) => contents
+                .iter()
+                .map(|content| Content {
+                    field: content.field.clone(),
+                    message: content.message.clone(),
+                })
+                .collect(),
+            None => Vec::new(),
+        };
         ErroContent {
             code: self.code,
             message: self.message,
+            contents: Some(contents),
         }
+    }
+}
+
+impl std::fmt::Display for Content {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?}", self)
     }
 }
 
@@ -99,14 +141,32 @@ impl std::fmt::Display for CustomError {
 //     }
 // }
 
-// impl From<validator::ValidationErrors> for CustomError {
-//     fn from(err: validator::ValidationErrors) -> CustomError {
-//         CustomError {
-//             message: Some(err.to_string()),
-//             err_type: CustomErrorType::ValidationError,
-//         }
-//     }
-// }
+impl From<validator::ValidationErrors> for CustomError {
+    fn from(err: validator::ValidationErrors) -> CustomError {
+        let errors_string = err.to_string();
+        let errors_content: Vec<&str> = errors_string.split_terminator('\n').collect();
+        let mut contents: Vec<Content> = Vec::new();
+        for error_content in errors_content {
+            let error_content: Vec<&str> = error_content.splitn(2, ':').collect();
+            if error_content.len() == 2 {
+                let field = error_content[0].trim().to_string();
+                let message = error_content[1].trim().to_string();
+                let content = Content {
+                    field: Some(field),
+                    message: Some(message),
+                };
+                contents.push(content);
+            }
+        }
+        println!("#############{:?}", &contents);
+        CustomError {
+            code: INVALID_PAYLOAD.0,
+            message: INVALID_PAYLOAD.1,
+            err_type: INVALID_PAYLOAD.2,
+            contents: Some(contents),
+        }
+    }
+}
 
 impl From<(u16, &'static str, CustomErrorType)> for CustomError {
     fn from(err: (u16, &'static str, CustomErrorType)) -> CustomError {
@@ -114,6 +174,7 @@ impl From<(u16, &'static str, CustomErrorType)> for CustomError {
             code: err.0,
             message: err.1,
             err_type: err.2,
+            contents: None,
         }
     }
 }

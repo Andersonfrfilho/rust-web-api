@@ -6,6 +6,7 @@
     "actix",
     "healthcheck",
     "openapi",
+    "splitn",
     "utoipa"
   ]
 }
