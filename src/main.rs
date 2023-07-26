@@ -63,6 +63,7 @@ async fn main() -> std::io::Result<()> {
             }),
         )
         .wrap(middlewares::request_id::RequestId::default())
+        .wrap(middlewares::validate_keycloak::ValidateKeycloak::default())
             .configure(config)
     })
     .bind(("0.0.0.0", 3000))?
