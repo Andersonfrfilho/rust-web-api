@@ -20,7 +20,7 @@ futures = "0.3"
 utoipa = "3.3.0"
 utoipa-swagger-ui = { version = "3", features = ["actix-web"] }
 derive_more = "0.99.17"
-validator = "0.16.1"
+validator = { version = "0.16.1", features = ["derive"] }
 
 [dependencies.uuid]
 version = "1.3.4"

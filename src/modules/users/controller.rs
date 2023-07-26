@@ -2,9 +2,9 @@ use actix_web::Result;
 use actix_web::{delete, patch, post, web, HttpRequest, HttpResponse, Responder};
 use serde::Deserialize;
 
-use crate::modules::error::constant::INVALID_ID_CODE;
 use crate::modules::error::custom::{CustomError, CustomErrorType};
 use crate::modules::users::services::find_by_id;
+use validator::{Validate, ValidationError};
 
 use super::structs::User;
 
@@ -12,16 +12,22 @@ async fn index(req: HttpRequest) -> impl Responder {
     HttpResponse::Ok().body("traz usuario")
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug, Validate)]
 struct PathShow {
+    #[validate(length(min = 5, max = 10, message = "id invalido", code = "404"))]
     id: String,
-}
-
-fn string_to_static_str(s: String) -> &'static str {
-    Box::leak(s.into_boxed_str())
+    // #[validate(length(min = 5, max = 10, message = "name invalido", code = "404"))]
+    // name: String,
 }
 
 async fn show(data: web::Path<PathShow>) -> Result<web::Json<User>, CustomError> {
+    match data.validate() {
+        Ok(_) => (),
+        Err(err) => {
+            println!("{}", &err);
+            return Err(err.into());
+        }
+    };
     let id = data.id.to_string();
     let mut user: User = User::origin();
     match find_by_id::execute(&id) {
