@@ -5,7 +5,7 @@ use crate::modules::{
 
 pub fn execute(id: &String) -> Result<User, CustomError> {
     let obj = User::origin();
-    if id.len() < 9 {
+    if id.is_empty() {
         return Err(CustomError::from(INVALID_ID_CODE));
     }
     return Ok(obj);

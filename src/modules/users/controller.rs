@@ -14,7 +14,7 @@ async fn index(req: HttpRequest) -> impl Responder {
 
 #[derive(Deserialize, Debug, Validate)]
 struct PathShow {
-    #[validate(length(min = 5, max = 10, message = "id invalido", code = "404"))]
+    #[validate(length(min = 5, max = 10, message = "id invalido", code = "400"))]
     id: String,
     // #[validate(length(min = 5, max = 10, message = "name invalido", code = "404"))]
     // name: String,
@@ -24,7 +24,6 @@ async fn show(data: web::Path<PathShow>) -> Result<web::Json<User>, CustomError>
     match data.validate() {
         Ok(_) => (),
         Err(err) => {
-            println!("{}", &err);
             return Err(err.into());
         }
     };
