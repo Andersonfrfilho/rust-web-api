@@ -55,16 +55,13 @@ async fn main() -> std::io::Result<()> {
         App::new()
         .wrap(
             Logger::new(
-                "%a %t %r %s %b %{Referer}i %{User-Agent}i %T payload: %b %Authorization: %{Authorization}xi requestid: %{x-request-id}i",
+                "request_id: %{x-request-id}i - %a %t %r %s %b %{Referer}i %{User-Agent}i %T payload: %b %Authorization: %{Authorization}xi",
             )
             .exclude("/healthcheck").exclude_regex("/doc")
             .custom_request_replace(&AUTHORIZATION, |req| {
                 obfuscator_part_of_value(req.headers().get(AUTHORIZATION))
             }),
-        )
-        .wrap(middlewares::request_id::RequestId::default())
-        .wrap(middlewares::validate_keycloak::ValidateKeycloak::default())
-            .configure(config)
+        ).wrap(middlewares::validate_keycloak::ValidateKeycloak::default()).configure(config)
     })
     .bind(("0.0.0.0", 3000))?
     .run()

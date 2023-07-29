@@ -5,9 +5,13 @@
   "cSpell.words": [
     "actix",
     "healthcheck",
+    "httpauth",
     "keycloak",
+    "middlewares",
     "openapi",
+    "Referer",
     "splitn",
-    "utoipa"
+    "utoipa",
+    "uuid"
   ]
 }

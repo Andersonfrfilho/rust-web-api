@@ -1,17 +1,22 @@
-use std::{
-    future::{ready, Ready},
-    str::FromStr,
-    task::{Context, Poll},
-};
+use serde::Serialize;
+use std::future::Future;
+use std::pin::Pin;
+use std::task::{Context, Poll};
 
 use actix_web::{
     dev::{Service, ServiceRequest, ServiceResponse, Transform},
-    http::header::{HeaderName, HeaderValue},
     Error,
 };
-use uuid::Uuid;
+use futures::future::ok;
 
-use crate::constants::REQUEST_ID;
+use crate::modules::error::constant::INVALID_AUTHORIZATION_HEADER;
+use crate::modules::error::custom::{CustomError, CustomErrorType};
+
+#[derive(Debug, Serialize)]
+struct ErrorResponse {
+    code: i32,
+    message: String,
+}
 
 #[doc(hidden)]
 pub struct ValidateKeycloakService<S> {
@@ -21,37 +26,39 @@ pub struct ValidateKeycloakService<S> {
 impl<S, B> Service<ServiceRequest> for ValidateKeycloakService<S>
 where
     S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = actix_web::Error>,
+    S::Future: 'static,
 {
     type Response = ServiceResponse<B>;
     type Error = Error;
-    type Future = S::Future;
+    type Future = Pin<Box<dyn Future<Output = Result<Self::Response, Self::Error>>>>;
 
     fn poll_ready(&self, ctx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
         self.service.poll_ready(ctx)
     }
 
-    fn call(&self, mut req: ServiceRequest) -> Self::Future {
-        println!("############### entrou");
-        let req_headers = req.headers();
-        let uuid_v4 = Uuid::new_v4().to_string();
-        let header_value_optional = HeaderValue::from_str(&uuid_v4).unwrap();
-        let request_id_information = match req_headers.get(REQUEST_ID) {
-            Some(request_id) => request_id,
-            _ => &header_value_optional,
+    fn call(&self, req: ServiceRequest) -> Self::Future {
+        println!("#######Auth:");
+        let auth_param = match req.headers().get("Authorization") {
+            Some(value_param) => match value_param.to_str() {
+                Ok(value) => value.to_string(),
+                Err(_) => String::new(),
+            },
+            None => String::new(),
         };
-        let request_id_info_string = match request_id_information.to_str() {
-            Ok(request_id_string) => request_id_string,
-            _ => &uuid_v4,
-        };
-        let header_name = HeaderName::from_str(&REQUEST_ID).unwrap();
-        let header_value = HeaderValue::from_str(&request_id_info_string).unwrap();
-        // req.headers_mut().insert(header_name, header_value);
-        self.service.call(req)
+
+        if auth_param.is_empty() {
+            let custom_error = CustomError::from(INVALID_AUTHORIZATION_HEADER);
+            return Box::pin(async { Err(custom_error.into()) });
+        }
+
+        // Restante da lógica...
+
+        Box::pin(self.service.call(req))
     }
 }
 
 #[derive(Clone, Debug)]
-pub struct ValidateKeycloak {}
+pub struct ValidateKeycloak;
 
 impl ValidateKeycloak {
     pub fn default() -> Self {
@@ -61,15 +68,15 @@ impl ValidateKeycloak {
 
 impl<S, B> Transform<S, ServiceRequest> for ValidateKeycloak
 where
-    S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = actix_web::Error>,
+    S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = actix_web::Error> + 'static,
 {
     type Response = ServiceResponse<B>;
     type Error = Error;
-    type Future = Ready<Result<Self::Transform, Self::InitError>>;
+    type Future = Pin<Box<dyn Future<Output = Result<Self::Transform, Self::InitError>>>>;
     type Transform = ValidateKeycloakService<S>;
     type InitError = ();
 
     fn new_transform(&self, service: S) -> Self::Future {
-        ready(Ok(ValidateKeycloakService { service }))
+        Box::pin(ok(ValidateKeycloakService { service }))
     }
 }

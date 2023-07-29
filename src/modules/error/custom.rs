@@ -6,7 +6,7 @@ use serde::Serialize;
 use utoipa::openapi::Array;
 use validator::ValidationErrors;
 
-use super::constant::INVALID_PAYLOAD;
+use super::constant::{INVALID_AUTHORIZATION_HEADER, INVALID_PAYLOAD};
 
 #[derive(utoipa::ToSchema, Serialize)]
 
@@ -58,6 +58,7 @@ pub struct InternalServerError {
 pub enum CustomErrorType {
     DieselError,
     ValidationError,
+    InvalidAuthorizationHeader,
     UserError(String),
 }
 
@@ -140,7 +141,18 @@ impl std::fmt::Display for CustomError {
 //         }
 //     }
 // }
-
+//implementador de erro do parse do header bearer
+impl From<actix_web_httpauth::headers::authorization::ParseError> for CustomError {
+    fn from(err: actix_web_httpauth::headers::authorization::ParseError) -> CustomError {
+        CustomError {
+            code: INVALID_AUTHORIZATION_HEADER.0,
+            message: INVALID_AUTHORIZATION_HEADER.1,
+            err_type: INVALID_AUTHORIZATION_HEADER.2,
+            contents: None,
+        }
+    }
+}
+// Implement erro de validação de path, body e query
 impl From<validator::ValidationErrors> for CustomError {
     fn from(err: validator::ValidationErrors) -> CustomError {
         let errors_string = err.to_string();
@@ -158,7 +170,7 @@ impl From<validator::ValidationErrors> for CustomError {
                 contents.push(content);
             }
         }
-        println!("#############{:?}", &contents);
+
         CustomError {
             code: INVALID_PAYLOAD.0,
             message: INVALID_PAYLOAD.1,
@@ -167,7 +179,7 @@ impl From<validator::ValidationErrors> for CustomError {
         }
     }
 }
-
+// Implement erro do Custom error
 impl From<(u16, &'static str, CustomErrorType)> for CustomError {
     fn from(err: (u16, &'static str, CustomErrorType)) -> CustomError {
         CustomError {
@@ -178,13 +190,13 @@ impl From<(u16, &'static str, CustomErrorType)> for CustomError {
         }
     }
 }
-
+// Implement de resposta de erro de validação
 impl ResponseError for CustomError {
     fn status_code(&self) -> StatusCode {
         match self.err_type {
             CustomErrorType::DieselError => StatusCode::INTERNAL_SERVER_ERROR,
             CustomErrorType::ValidationError => StatusCode::BAD_REQUEST,
-            // CustomErrorType::UserError => StatusCode::INTERNAL_SERVER_ERROR,
+            CustomErrorType::InvalidAuthorizationHeader => StatusCode::UNAUTHORIZED,
             // CustomErrorType::R2D2Error => StatusCode::INTERNAL_SERVER_ERROR,
             _ => StatusCode::INTERNAL_SERVER_ERROR,
         }
