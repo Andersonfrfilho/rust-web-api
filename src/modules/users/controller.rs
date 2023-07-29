@@ -2,13 +2,13 @@ use actix_web::Result;
 use actix_web::{delete, patch, post, web, HttpRequest, HttpResponse, Responder};
 use serde::Deserialize;
 
-use crate::modules::error::custom::{CustomError, CustomErrorType};
+use crate::modules::error::custom::CustomError;
 use crate::modules::users::services::find_by_id;
-use validator::{Validate, ValidationError};
+use validator::Validate;
 
 use super::structs::User;
 
-async fn index(req: HttpRequest) -> impl Responder {
+async fn index(_: HttpRequest) -> impl Responder {
     HttpResponse::Ok().body("traz usuario")
 }
 

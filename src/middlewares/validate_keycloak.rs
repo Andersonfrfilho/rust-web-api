@@ -9,7 +9,10 @@ use actix_web::{
 };
 use futures::future::ok;
 
-use crate::modules::error::constant::INVALID_AUTHORIZATION_HEADER;
+use crate::modules::error::constant::{
+    ERROR_CONVERT_VALUE_TO_STRING, HEADER_AUTHORIZATION_BEARER_INCOMPLETE,
+    MISSING_AUTHORIZATION_HEADER,
+};
 use crate::modules::error::custom::{CustomError, CustomErrorType};
 
 #[derive(Debug, Serialize)]
@@ -37,21 +40,35 @@ where
     }
 
     fn call(&self, req: ServiceRequest) -> Self::Future {
-        println!("#######Auth:");
         let auth_param = match req.headers().get("Authorization") {
             Some(value_param) => match value_param.to_str() {
                 Ok(value) => value.to_string(),
-                Err(_) => String::new(),
+                Err(_) => {
+                    let custom_error = CustomError::from(ERROR_CONVERT_VALUE_TO_STRING);
+                    return Box::pin(async { Err(custom_error.into()) });
+                }
             },
-            None => String::new(),
+            None => {
+                let custom_error = CustomError::from(MISSING_AUTHORIZATION_HEADER);
+                return Box::pin(async { Err(custom_error.into()) });
+            }
         };
 
-        if auth_param.is_empty() {
-            let custom_error = CustomError::from(INVALID_AUTHORIZATION_HEADER);
+        let number_components_in_auth = 2;
+        let auth_param_split: Vec<&str> =
+            auth_param.splitn(number_components_in_auth, ' ').collect();
+
+        if auth_param_split.len() < number_components_in_auth {
+            let custom_error = CustomError::from(HEADER_AUTHORIZATION_BEARER_INCOMPLETE);
             return Box::pin(async { Err(custom_error.into()) });
         }
+        let index_token = 1;
+        let token = auth_param_split[index_token];
 
-        // Restante da lógica...
+        // if bearer.is_empty() {
+        //     let custom_error = CustomError::from(MISSING_AUTHORIZATION_HEADER);
+        //     return Box::pin(async { Err(custom_error.into()) });
+        // }
 
         Box::pin(self.service.call(req))
     }

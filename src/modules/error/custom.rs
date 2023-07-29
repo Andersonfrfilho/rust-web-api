@@ -1,12 +1,8 @@
-use std::io::Split;
-
 use actix_web::{http::StatusCode, HttpResponse, ResponseError};
-use derive_more::{Display, Error};
+use derive_more::Error;
 use serde::Serialize;
-use utoipa::openapi::Array;
-use validator::ValidationErrors;
 
-use super::constant::{INVALID_AUTHORIZATION_HEADER, INVALID_PAYLOAD};
+use super::constant::{INVALID_PAYLOAD, MISSING_AUTHORIZATION_HEADER};
 
 #[derive(utoipa::ToSchema, Serialize)]
 
@@ -59,7 +55,7 @@ pub enum CustomErrorType {
     DieselError,
     ValidationError,
     InvalidAuthorizationHeader,
-    UserError(String),
+    ErrorConvertValueToString,
 }
 
 #[derive(Debug, Serialize, Error)]
@@ -143,11 +139,11 @@ impl std::fmt::Display for CustomError {
 // }
 //implementador de erro do parse do header bearer
 impl From<actix_web_httpauth::headers::authorization::ParseError> for CustomError {
-    fn from(err: actix_web_httpauth::headers::authorization::ParseError) -> CustomError {
+    fn from(_: actix_web_httpauth::headers::authorization::ParseError) -> CustomError {
         CustomError {
-            code: INVALID_AUTHORIZATION_HEADER.0,
-            message: INVALID_AUTHORIZATION_HEADER.1,
-            err_type: INVALID_AUTHORIZATION_HEADER.2,
+            code: MISSING_AUTHORIZATION_HEADER.0,
+            message: MISSING_AUTHORIZATION_HEADER.1,
+            err_type: MISSING_AUTHORIZATION_HEADER.2,
             contents: None,
         }
     }
@@ -194,9 +190,9 @@ impl From<(u16, &'static str, CustomErrorType)> for CustomError {
 impl ResponseError for CustomError {
     fn status_code(&self) -> StatusCode {
         match self.err_type {
-            CustomErrorType::DieselError => StatusCode::INTERNAL_SERVER_ERROR,
             CustomErrorType::ValidationError => StatusCode::BAD_REQUEST,
             CustomErrorType::InvalidAuthorizationHeader => StatusCode::UNAUTHORIZED,
+            CustomErrorType::ErrorConvertValueToString => StatusCode::INTERNAL_SERVER_ERROR,
             // CustomErrorType::R2D2Error => StatusCode::INTERNAL_SERVER_ERROR,
             _ => StatusCode::INTERNAL_SERVER_ERROR,
         }
