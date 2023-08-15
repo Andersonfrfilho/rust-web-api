@@ -25,3 +25,5 @@
   [] conexao com banco de dados noSQL
   [] conexao com bando de dados de cache
   [] conexao com rabbitmq producer
+  [] Makefile
+  [] migration no makefile

@@ -1,0 +1,37 @@
+services:
+  keycloak_database:
+    image: postgres
+    container_name: postgres_db
+    restart: always
+    env_file:
+      - .env
+    volumes:
+      - ./.docker/data/database:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=${DATABASE_NAME}
+      - POSTGRES_USER=${DATABASE_USER}
+      - POSTGRES_PASSWORD=${DATABASE_PASSWORD}
+    ports:
+      - "${DATABASE_PORT}:${DATABASE_PORT}"
+  keycloak:
+    image: docker.io/bitnami/keycloak:latest
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    environment:
+      - KEYCLOAK_CREATE_ADMIN_USER=true
+      - KEYCLOAK_ADMIN_USER=admin
+      - KEYCLOAK_ADMIN_PASSWORD=admin
+      - KEYCLOAK_DATABASE_PORT=${DATABASE_PORT}
+      - KEYCLOAK_DATABASE_NAME=${DATABASE_NAME}
+      - KEYCLOAK_DATABASE_USER=${DATABASE_USER}
+      - KEYCLOAK_DATABASE_PASSWORD=${DATABASE_PASSWORD}
+      - KEYCLOAK_DATABASE_HOST=postgres_db
+    depends_on:
+      - keycloak_database
+    volumes:
+      - "./.docker/data/keycloak/mynewtheme:/opt/bitnami/keycloak/themes/mynewtheme"
+volumes:
+  postgres_db_data:
+    driver: local

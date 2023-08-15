@@ -62,13 +62,17 @@ where
             let custom_error = CustomError::from(HEADER_AUTHORIZATION_BEARER_INCOMPLETE);
             return Box::pin(async { Err(custom_error.into()) });
         }
+
+        let index_bearer = 0;
+        let bearer = auth_param_split[index_bearer];
+
+        if bearer.is_empty() {
+            let custom_error = CustomError::from(MISSING_AUTHORIZATION_HEADER);
+            return Box::pin(async { Err(custom_error.into()) });
+        }
+
         let index_token = 1;
         let token = auth_param_split[index_token];
-
-        // if bearer.is_empty() {
-        //     let custom_error = CustomError::from(MISSING_AUTHORIZATION_HEADER);
-        //     return Box::pin(async { Err(custom_error.into()) });
-        // }
 
         Box::pin(self.service.call(req))
     }
